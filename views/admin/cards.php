@@ -46,6 +46,7 @@ $this->title = 'Карты: ' . $type->title;
                 'attribute' => 'text',
                 'format' => 'ntext',
             ],
+            'action',
             'weight',
             'status',
             [
