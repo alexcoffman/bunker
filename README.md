@@ -127,6 +127,17 @@ return [
 - Check and edit the other files in the `config/` directory to customize your application as required.
 - Refer to the README in the `tests` directory for information specific to basic application tests.
 
+### Mail
+
+Set sender and administrator addresses in `config/params.php` to enable e-mail features:
+
+```php
+return [
+    'adminEmail'  => 'admin@example.com',
+    'senderEmail' => 'noreply@example.com',
+    'senderName'  => 'Game Mailer',
+];
+```
 
 TESTING
 -------
