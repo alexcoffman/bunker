@@ -10,6 +10,7 @@
 /** @var array<int, app\models\GameCard[]> $cardsByPlayer */
 /** @var app\models\GamePlayer[] $alivePlayers */
 /** @var int[] $votingRounds */
+/** @var bool $specialUsed */
 
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -189,25 +190,39 @@ $stripBunkerPrefix = function(string $text): string { return preg_replace('/^К�
                                       || ((int)$game->round_no >= 2)
                                   );
                               ?>
-                              <div class="text-end">
-                                  <?php if ($c->type_code === 'SPECIAL' && $c->action === 'peregolosovanie' && (int)$c->is_revealed !== 1 && $game->phase==='VOTE'): ?>
-                                      <form method="post" action="<?= Url::to(['/game/special', 'code' => $game->code, 'card_id' => $c->id]) ?>"
-                                            onsubmit="return confirm('Запустить новое голосование?');">
-                                          <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
-                                          <button class="btn btn-sm btn-outline-danger">Переголосовать</button>
-                                      </form>
-                                  <?php elseif ($canRevealThis): ?>
-                                      <form method="post" action="<?= Url::to(['/game/reveal', 'code' => $game->code, 'card_id' => $c->id]) ?>">
-                                          <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
-                                          <button class="btn btn-sm btn-outline-primary">Открыть</button>
-                                      </form>
-                                  <?php else: ?>
-                                      <button class="btn btn-sm btn-outline-secondary" disabled>Открыть</button>
-                                  <?php endif; ?>
-                              </div>
-                          </div>
-                      <?php endforeach; ?>
-                  </div>
+                                <div class="text-end">
+                                    <?php if ($c->type_code === 'SPECIAL' && $c->action === 'peregolosovanie' && (int)$c->is_revealed !== 1 && $game->phase==='VOTE'): ?>
+                                        <form method="post" action="<?= Url::to(['/game/special', 'code' => $game->code, 'card_id' => $c->id]) ?>"
+                                              onsubmit="return confirm('Запустить новое голосование?');">
+                                            <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                            <button class="btn btn-sm btn-outline-danger">Переголосовать</button>
+                                        </form>
+                                    <?php elseif ($c->type_code === 'SPECIAL' && $c->action === 'mne-nuzhnee'): ?>
+                                        <?php if ((int)$c->is_revealed !== 1 && !$specialUsed): ?>
+                                            <form method="post" action="<?= Url::to(['/game/special', 'code' => $game->code, 'card_id' => $c->id]) ?>">
+                                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                                <select name="target_id" class="form-select form-select-sm mb-1">
+                                                    <?php foreach ($players as $p): if ($p->id === $current->id) continue; ?>
+                                                        <option value="<?= $p->id ?>"><?= Html::encode($p->nickname) ?></option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                                <button class="btn btn-sm btn-outline-danger">Забрать багаж</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>Забрать багаж</button>
+                                        <?php endif; ?>
+                                    <?php elseif ($canRevealThis): ?>
+                                        <form method="post" action="<?= Url::to(['/game/reveal', 'code' => $game->code, 'card_id' => $c->id]) ?>">
+                                            <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                            <button class="btn btn-sm btn-outline-primary">Открыть</button>
+                                        </form>
+                                    <?php else: ?>
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>Открыть</button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
               <?php endif; ?>
 
             <?php if ($current->role === 'HOST'): ?>
