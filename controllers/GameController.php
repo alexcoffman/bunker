@@ -178,7 +178,6 @@ class GameController extends Controller
 
         $alivePlayers = GamePlayer::find()->where(['game_id'=>$game->id, 'is_alive'=>1])->orderBy(['id'=>SORT_ASC])->all();
         $votingRounds = $this->getVotingRounds($game);
-        $specialUsed = GameCard::find()->where(['game_id'=>$game->id, 'type_code'=>'SPECIAL', 'is_revealed'=>1])->exists();
 
         $this->view->params = array_merge($this->view->params, [
             'game'          => $game,
@@ -193,7 +192,6 @@ class GameController extends Controller
             'types'         => $types,
             'alivePlayers'  => $alivePlayers,
             'votingRounds'  => $votingRounds,
-            'specialUsed'   => $specialUsed,
         ]);
     }
 
@@ -359,12 +357,6 @@ class GameController extends Controller
             'type_code' => 'SPECIAL',
         ]);
         if (!$card || (int)$card->is_revealed === 1) return $this->redirect(['/game/' . $code]);
-
-        // Глобально особую карту можно использовать только один раз за игру.
-        $specialUsed = GameCard::find()
-            ->where(['game_id' => $game->id, 'type_code' => 'SPECIAL', 'is_revealed' => 1])
-            ->exists();
-        if ($specialUsed) return $this->redirect(['/game/' . $code]);
 
         $targetId = (int)Yii::$app->request->post('target_id', 0);
 
