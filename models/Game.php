@@ -20,6 +20,7 @@ use yii\db\ActiveRecord;
  * @property int|null $initial_player_count
  * @property string|null $voting_rounds
  * @property int|null $survivors_target
+ * @property int $extra_threats
  */
 class Game extends ActiveRecord
 {
@@ -40,6 +41,7 @@ class Game extends ActiveRecord
             [['code'], 'string', 'length' => 4],
             [['status','phase'], 'string', 'max' => 16],
             [['max_players','round_no','created_at','started_at','finished_at','current_turn_index','last_first_player_id','total_rounds','initial_player_count','survivors_target'], 'integer'],
+            [['extra_threats'], 'integer'],
             [['turn_order','voting_rounds'], 'string'],
         ];
     }

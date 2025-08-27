@@ -303,6 +303,41 @@ class GameController extends Controller
             ['game_id'=>$game->id, 'player_id'=>$target->id]
         );
 
+        // If eliminated player had "tainaya-ugroza", remember extra threat for end game
+        $secretCount = (int) GameCard::find()->where([
+            'game_id'   => $game->id,
+            'player_id' => $target->id,
+            'type_code' => 'SPECIAL',
+            'action'    => 'tainaya-ugroza',
+        ])->count();
+        if ($secretCount > 0) {
+            $game->extra_threats = ((int)$game->extra_threats) + $secretCount;
+            $game->save(false);
+            $this->pushEvent($game->id, 'tainaya_ugroza', ['count' => $secretCount]);
+        }
+
+        // If eliminated player had "diversia", hide random public bunker cards
+        $diversiaCount = (int) GameCard::find()->where([
+            'game_id'   => $game->id,
+            'player_id' => $target->id,
+            'type_code' => 'SPECIAL',
+            'action'    => 'diversia',
+        ])->count();
+        if ($diversiaCount > 0) {
+            for ($i = 0; $i < $diversiaCount; $i++) {
+                $open = GameCard::find()->where([
+                    'game_id'   => $game->id,
+                    'type_code' => 'BUNKER',
+                    'is_public' => 1,
+                ])->all();
+                if (!$open) break;
+                $hide = $open[random_int(0, count($open) - 1)];
+                $hide->is_public = 0;
+                $hide->save(false);
+                $this->pushEvent($game->id, 'bunker_hide', ['card_id' => $hide->id]);
+            }
+        }
+
         $this->pushEvent($game->id, 'player_eliminate', ['player_id'=>$target->id]);
         $this->advanceRound($game);
         return $this->redirect(['/game/' . $code]);
@@ -601,5 +636,31 @@ class GameController extends Controller
             }
         }
         $this->pushEvent($game->id, 'threat_deal', []);
+
+        // Extra threats from "tainaya-ugroza" special cards
+        $extra = (int)$game->extra_threats;
+        if ($extra > 0) {
+            $alive = GamePlayer::find()->where(['game_id'=>$game->id, 'is_alive'=>1])->all();
+            if ($alive) {
+                for ($i = 0; $i < $extra; $i++) {
+                    $target = $alive[random_int(0, count($alive)-1)];
+                    if ($t = Card::pickTextByTypeCode('THREAT')) {
+                        (new GameCard([
+                            'game_id'     => $game->id,
+                            'player_id'   => $target->id,
+                            'type_code'   => 'THREAT',
+                            'card_text'   => $t,
+                            'is_public'   => 1,
+                            'is_revealed' => 1,
+                            'created_at'  => $now,
+                            'revealed_at' => $now,
+                        ]))->save(false);
+                        $this->pushEvent($game->id, 'threat_extra', ['player_id'=>$target->id]);
+                    }
+                }
+            }
+            $game->extra_threats = 0;
+            $game->save(false);
+        }
     }
 }
