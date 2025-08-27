@@ -10,7 +10,6 @@
 /** @var array<int, app\models\GameCard[]> $cardsByPlayer */
 /** @var app\models\GamePlayer[] $alivePlayers */
 /** @var int[] $votingRounds */
-/** @var bool $specialUsed */
 
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -198,7 +197,7 @@ $stripBunkerPrefix = function(string $text): string { return preg_replace('/^К�
                                             <button class="btn btn-sm btn-outline-danger">Переголосовать</button>
                                         </form>
                                     <?php elseif ($c->type_code === 'SPECIAL' && $c->action === 'mne-nuzhnee'): ?>
-                                        <?php if ((int)$c->is_revealed !== 1 && !$specialUsed): ?>
+                                        <?php if ((int)$c->is_revealed !== 1): ?>
                                             <form method="post" action="<?= Url::to(['/game/special', 'code' => $game->code, 'card_id' => $c->id]) ?>">
                                                 <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
                                                 <select name="target_id" class="form-select form-select-sm mb-1">
@@ -210,6 +209,22 @@ $stripBunkerPrefix = function(string $text): string { return preg_replace('/^К�
                                             </form>
                                         <?php else: ?>
                                             <button class="btn btn-sm btn-outline-secondary" disabled>Забрать багаж</button>
+                                        <?php endif; ?>
+                                    <?php elseif ($c->type_code === 'SPECIAL' && in_array($c->action, [
+                                        'davaite-nachistotu-bagazh',
+                                        'davaite-nachistotu-fakty',
+                                        'davaite-nachistotu-hobbi',
+                                        'davaite-nachistotu-zdorovie',
+                                        'davaite-nachistotu-biologia',
+                                        'davaite-nachistotu-fobia',
+                                    ])): ?>
+                                        <?php if ((int)$c->is_revealed !== 1): ?>
+                                            <form method="post" action="<?= Url::to(['/game/special', 'code' => $game->code, 'card_id' => $c->id]) ?>">
+                                                <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                                <button class="btn btn-sm btn-outline-danger">Перемешать</button>
+                                            </form>
+                                        <?php else: ?>
+                                            <button class="btn btn-sm btn-outline-secondary" disabled>Перемешать</button>
                                         <?php endif; ?>
                                     <?php elseif ($canRevealThis): ?>
                                         <form method="post" action="<?= Url::to(['/game/reveal', 'code' => $game->code, 'card_id' => $c->id]) ?>">
