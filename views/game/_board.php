@@ -38,7 +38,7 @@ $stripBunkerPrefix = function(string $text): string { return preg_replace('/^К�
 </div>
 <?php if ($game->status === 'FINISHED' && $current): ?>
     <?php if ((int)$current->is_alive === 1): ?>
-        <div class="alert alert-danger">Вы победили и попали в бункер!</div>
+        <div class="alert alert-success">Вы победили и попали в бункер!</div>
     <?php else: ?>
         <div class="alert alert-danger">Вы проиграли и не попали в бункер!</div>
     <?php endif; ?>
