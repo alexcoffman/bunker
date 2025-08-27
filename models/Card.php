@@ -7,6 +7,7 @@ use yii\db\ActiveRecord;
  * @property int $id
  * @property int $type_id
  * @property string $text
+ * @property string|null $action
  * @property int $weight
  * @property string $status
  * @property int $created_at
@@ -22,6 +23,7 @@ class Card extends ActiveRecord
             [['type_id','text'], 'required'],
             [['type_id','weight','created_at','updated_at'], 'integer'],
             [['text'], 'string'],
+            [['action'], 'string', 'max' => 32],
             [['status'], 'in', 'range' => ['active','hidden','archived']],
         ];
     }
