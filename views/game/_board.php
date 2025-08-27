@@ -174,35 +174,41 @@ $stripBunkerPrefix = function(string $text): string { return preg_replace('/^К�
                         $title = Html::encode($getTitle($c->type_code));
                         ?>
                         <div class="list-group-item d-flex justify-content-between align-items-start<?= $c->type_code==='THREAT' ? ' list-group-item-danger' : '' ?>">
-                            <div class="me-3">
-                                <div class="fw-bold <?= $titleCls ?>"><?= $title ?></div>
-                                <div><?= nl2br(Html::encode($c->card_text)) ?></div>
-                            </div>
+                              <div class="me-3">
+                                  <div class="fw-bold <?= $titleCls ?>"><?= $title ?></div>
+                                  <div><?= nl2br(Html::encode($c->card_text)) ?></div>
+                              </div>
 
-                            <?php
-                            $isMyTurn = ($game->phase==='DISCUSS') && $onMoveId && ((int)$onMoveId === (int)$current->id);
-                            $canRevealThis =
-                                $isMyTurn
-                                && !$revealed
-                                && (
-                                    ((int)$game->round_no === 1 && $c->type_code === 'PROFESSION')
-                                    || ((int)$game->round_no >= 2)
-                                );
-                            ?>
-                            <div class="text-end">
-                                <?php if ($canRevealThis): ?>
-                                    <form method="post" action="<?= Url::to(['/game/reveal', 'code' => $game->code, 'card_id' => $c->id]) ?>">
-                                        <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
-                                        <button class="btn btn-sm btn-outline-primary">Открыть</button>
-                                    </form>
-                                <?php else: ?>
-                                    <button class="btn btn-sm btn-outline-secondary" disabled>Открыть</button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
-                </div>
-            <?php endif; ?>
+                              <?php
+                              $isMyTurn = ($game->phase==='DISCUSS') && $onMoveId && ((int)$onMoveId === (int)$current->id);
+                              $canRevealThis =
+                                  $isMyTurn
+                                  && !$revealed
+                                  && (
+                                      ((int)$game->round_no === 1 && $c->type_code === 'PROFESSION')
+                                      || ((int)$game->round_no >= 2)
+                                  );
+                              ?>
+                              <div class="text-end">
+                                  <?php if ($c->type_code === 'SPECIAL' && $c->action === 'peregolosovanie' && (int)$c->is_revealed !== 1 && $game->phase==='VOTE'): ?>
+                                      <form method="post" action="<?= Url::to(['/game/special', 'code' => $game->code, 'card_id' => $c->id]) ?>"
+                                            onsubmit="return confirm('Запустить новое голосование?');">
+                                          <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                          <button class="btn btn-sm btn-outline-danger">Переголосовать</button>
+                                      </form>
+                                  <?php elseif ($canRevealThis): ?>
+                                      <form method="post" action="<?= Url::to(['/game/reveal', 'code' => $game->code, 'card_id' => $c->id]) ?>">
+                                          <?= Html::hiddenInput(Yii::$app->request->csrfParam, Yii::$app->request->getCsrfToken()) ?>
+                                          <button class="btn btn-sm btn-outline-primary">Открыть</button>
+                                      </form>
+                                  <?php else: ?>
+                                      <button class="btn btn-sm btn-outline-secondary" disabled>Открыть</button>
+                                  <?php endif; ?>
+                              </div>
+                          </div>
+                      <?php endforeach; ?>
+                  </div>
+              <?php endif; ?>
 
             <?php if ($current->role === 'HOST'): ?>
                 <div class="mt-4 d-flex gap-2">
