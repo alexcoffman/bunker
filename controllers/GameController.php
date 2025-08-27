@@ -555,6 +555,19 @@ class GameController extends Controller
                     ]))->save(false);
                 }
             }
+            // Раздаём карту особого условия каждому игроку
+            if ($row = Card::pickOneByTypeCode('SPECIAL')) {
+                (new GameCard([
+                    'game_id'     => $gameId,
+                    'player_id'   => $p->id,
+                    'type_code'   => 'SPECIAL',
+                    'card_text'   => $row['text'],
+                    'action'      => $row['action'] ?? null,
+                    'is_public'   => 0,
+                    'is_revealed' => 0,
+                    'created_at'  => $now,
+                ]))->save(false);
+            }
         }
     }
 
