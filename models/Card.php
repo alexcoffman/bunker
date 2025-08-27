@@ -29,25 +29,33 @@ class Card extends ActiveRecord
     }
 
     /**
-     * Выбирает случайную активную карту по коду типа с учётом веса.
-     * Возвращает текст карты (или null, если нет карт).
+     * Возвращает случайную активную карту по коду типа с учётом веса.
+     * Возвращает массив с ключами `text` и `action` (или null, если нет карт).
      */
-    public static function pickTextByTypeCode(string $typeCode): ?string
+    public static function pickOneByTypeCode(string $typeCode): ?array
     {
-        $row = (new \yii\db\Query())
+        $rows = (new \yii\db\Query())
             ->from('{{%card}} c')
             ->innerJoin('{{%card_type}} t', 't.id = c.type_id')
             ->where(['t.code' => $typeCode, 'c.status' => 'active', 't.status' => 'active'])
             ->all();
 
-        if (!$row) return null;
+        if (!$rows) return null;
 
-        // Взвешенный случайный выбор
         $pool = [];
-        foreach ($row as $r) {
+        foreach ($rows as $r) {
             $w = max(1, (int)$r['weight']);
-            for ($i=0; $i<$w; $i++) $pool[] = $r['text'];
+            for ($i=0; $i<$w; $i++) $pool[] = $r;
         }
         return $pool[random_int(0, count($pool)-1)];
+    }
+
+    /**
+     * Упрощённый вариант, возвращающий только текст карты (или null).
+     */
+    public static function pickTextByTypeCode(string $typeCode): ?string
+    {
+        $row = self::pickOneByTypeCode($typeCode);
+        return $row['text'] ?? null;
     }
 }

@@ -11,6 +11,7 @@ use yii\db\ActiveRecord;
  * @property int|null $player_id
  * @property string $type_code
  * @property string $card_text
+ * @property string|null $action
  * @property int $is_public
  * @property int $is_revealed
  * @property int $created_at
@@ -27,6 +28,7 @@ class GameCard extends ActiveRecord
             [['game_id','player_id','created_at','revealed_at'], 'integer'],
             [['is_public','is_revealed'], 'boolean'],
             [['card_text'], 'string'],
+            [['action'], 'string', 'max' => 32],
             [['type_code'], 'string', 'max' => 32],
         ];
     }
