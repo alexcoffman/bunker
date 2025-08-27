@@ -1,4 +1,37 @@
 <?php
+$shuffle = function(string $typeCode, string $event) {
+    return function(
+        \app\controllers\GameController $gc,
+        \app\models\Game $game,
+        \app\models\GameCard $card,
+        \app\models\GamePlayer $me,
+        ?int $targetId = null
+    ) use ($typeCode, $event) {
+        $cards = \app\models\GameCard::find()->where([
+            'game_id'   => $game->id,
+            'type_code' => $typeCode,
+            'is_public' => 1,
+        ])->all();
+        if (count($cards) < 2) return false;
+        $counts = [];
+        foreach ($cards as $c) {
+            $pid = (int)$c->player_id;
+            $counts[$pid] = ($counts[$pid] ?? 0) + 1;
+        }
+        $players = array_keys($counts);
+        shuffle($cards);
+        $i = 0;
+        foreach ($players as $pid) {
+            for ($j = 0; $j < $counts[$pid]; $j++) {
+                $cards[$i]->player_id = $pid;
+                $cards[$i]->save(false);
+                $i++;
+            }
+        }
+        $gc->pushEvent($game->id, $event, []);
+        return true;
+    };
+};
 return [
     'peregolosovanie' => function(
         \app\controllers\GameController $gc,
@@ -35,4 +68,10 @@ return [
         $gc->pushEvent($game->id, 'baggage_stolen', ['from' => $target->id, 'to' => $me->id]);
         return true;
     },
+    'davaite-nachistotu-bagazh'   => $shuffle('BAGGAGE', 'baggage_shuffle'),
+    'davaite-nachistotu-fakty'    => $shuffle('FACTS', 'facts_shuffle'),
+    'davaite-nachistotu-hobbi'    => $shuffle('HOBBY', 'hobby_shuffle'),
+    'davaite-nachistotu-zdorovie' => $shuffle('health', 'health_shuffle'),
+    'davaite-nachistotu-biologia' => $shuffle('BIOLOGY', 'biology_shuffle'),
+    'davaite-nachistotu-fobia'    => $shuffle('PHOBIA', 'phobia_shuffle'),
 ];
