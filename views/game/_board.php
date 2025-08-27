@@ -37,6 +37,14 @@ $stripBunkerPrefix = function(string $text): string { return preg_replace('/^К�
     </div>
 </div>
 
+<?php if ($game->status === 'FINISHED' && $current): ?>
+    <?php if ((int)$current->is_alive === 1): ?>
+        <div class="alert alert-danger">Вы победили и попали в бункер!</div>
+    <?php else: ?>
+        <div class="alert alert-danger">Вы проиграли и не попали в бункер!</div>
+    <?php endif; ?>
+<?php endif; ?>
+
 <?php if (!$nickname): ?>
     <div class="alert alert-info">Вы ещё не в игре. Введите ник, чтобы присоединиться.</div>
     <form method="post" action="<?= Url::to(['/game/join']) ?>" class="row g-2 mb-4">
