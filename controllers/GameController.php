@@ -26,16 +26,17 @@ class GameController extends Controller
                     'start'      => ['POST'],
                     'finish'     => ['POST'],
                     'reveal'     => ['POST'],
-                    'eliminate'  => ['POST'],
-                    'board'      => ['GET'],
-                    'ping'       => ['GET'],
-                ],
-            ],
-        ];
+                      'eliminate'  => ['POST'],
+                      'special'    => ['POST'],
+                      'board'      => ['GET'],
+                      'ping'       => ['GET'],
+                  ],
+              ],
+          ];
     }
 
     /* ===== Служебные: события ===== */
-    private function pushEvent(int $gameId, string $type, array $payload = []): void
+    public function pushEvent(int $gameId, string $type, array $payload = []): void
     {
         $e = new GameEvent([
             'game_id'    => $gameId,
@@ -305,6 +306,38 @@ class GameController extends Controller
         return $this->redirect(['/game/' . $code]);
     }
 
+    public function actionSpecial($code, $card_id)
+    {
+        $code = strtoupper($code);
+        $game = Game::findOne(['code'=>$code]);
+        if (!$game || $game->status !== 'LIVE') return $this->redirect(['/game/' . $code]);
+
+        $me = $this->findCurrentPlayer($game);
+        if (!$me) return $this->redirect(['/game/' . $code]);
+
+        $card = GameCard::findOne([
+            'id' => (int)$card_id,
+            'game_id' => $game->id,
+            'player_id' => $me->id,
+            'type_code' => 'SPECIAL',
+        ]);
+        if (!$card || (int)$card->is_revealed === 1) return $this->redirect(['/game/' . $code]);
+
+        $actions = require Yii::getAlias('@app/actions/special_actions.php');
+        $handler = $actions[$card->action] ?? null;
+        if (is_callable($handler)) {
+            $res = $handler($this, $game, $card);
+            if ($res !== false) {
+                $card->is_public = 1;
+                $card->is_revealed = 1;
+                $card->revealed_at = time();
+                $card->save(false);
+            }
+        }
+
+        return $this->redirect(['/game/' . $code]);
+    }
+
     /* ===== Ход игры ===== */
     private function findCurrentPlayer(Game $game): ?GamePlayer
     {
@@ -509,12 +542,13 @@ class GameController extends Controller
         foreach ($players as $p) {
             foreach ($playerTypes as $t) {
                 $code = $t['code'];
-                if ($text = Card::pickTextByTypeCode($code)) {
+                if ($row = Card::pickOneByTypeCode($code)) {
                     (new GameCard([
                         'game_id'     => $gameId,
                         'player_id'   => $p->id,
                         'type_code'   => $code,
-                        'card_text'   => $text,
+                        'card_text'   => $row['text'],
+                        'action'      => $row['action'] ?? null,
                         'is_public'   => 0,
                         'is_revealed' => 0,
                         'created_at'  => $now,

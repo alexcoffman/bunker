@@ -17,6 +17,9 @@ $this->title = ($isNew ? 'Новая' : 'Редактирование') . ' ка
 
     <?php $form = ActiveForm::begin(); ?>
     <?= $form->field($model, 'text')->textarea(['rows'=>6]) ?>
+    <?php if ($type->code === 'SPECIAL'): ?>
+        <?= $form->field($model, 'action')->textInput(['maxlength'=>32]) ?>
+    <?php endif; ?>
     <?= $form->field($model, 'weight')->input('number', ['min'=>1, 'step'=>1]) ?>
     <?= $form->field($model, 'status')->dropDownList(['active'=>'active','hidden'=>'hidden','archived'=>'archived']) ?>
 
